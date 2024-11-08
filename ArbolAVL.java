@@ -1,19 +1,18 @@
 package aed;
 
 import java.lang.Math;
-import java.util.*;
 
-public class ArbolAVL<T extends Comparable<T>>{
+public class ArbolAVL{
     private NodoAVL raiz;
     
     private class NodoAVL {
         NodoAVL izq;
         NodoAVL der;
         NodoAVL padre;
-        T clave;
-        T dato;
+        int clave;
+        int dato;
 
-        public NodoAVL(T c, T d) {
+        public NodoAVL(int c, int d) {
             dato = d;
             clave = c;
             izq = null;
@@ -34,7 +33,11 @@ public class ArbolAVL<T extends Comparable<T>>{
         return (altura(nodo.der) - altura(nodo.izq));
     }
 
-    public void insertar(ArbolAVL<T> arbol, T c, T d){
+    public ArbolAVL(){
+        raiz = null;
+    }
+
+    public void insertar(ArbolAVL arbol, int c, int d){
         if (arbol.raiz == null){
             NodoAVL nodo = new NodoAVL(c, d);
             arbol.raiz = nodo;
@@ -44,9 +47,9 @@ public class ArbolAVL<T extends Comparable<T>>{
         }
     } 
 
-    private void insertAuxAVL(NodoAVL nodo, T c, T d) {
+    private void insertAuxAVL(NodoAVL nodo, int c, int d) {
         NodoAVL nodoNuevo = new NodoAVL(c, d); //Nota: el rebalanceo se invoca para todos los nodos de la rama desde p hasta la raíz.
-        if (nodo.clave.compareTo(c) > 0){
+        if (nodo.clave > c){
             if (nodo.izq == null){
                 nodo.izq = nodoNuevo;
                 nodoNuevo.padre = nodo;
@@ -55,7 +58,7 @@ public class ArbolAVL<T extends Comparable<T>>{
                 insertAuxAVL(nodo.izq, c, d);
             }
         }
-        else if (nodo.clave.compareTo(c) < 0){
+        else if (nodo.clave < c){
             if (nodo.der == null){
                 nodo.der = nodoNuevo;
                 nodoNuevo.padre = nodo;
@@ -73,13 +76,13 @@ public class ArbolAVL<T extends Comparable<T>>{
         if (fbd < -1 && factorBalanceo(nodo.izq) <= 0){ // II
             rotacionDerecha(nodo);
         }
-        if (fbd > 1 && factorBalanceo(nodo.der) >= 0){ // DD
+        else if (fbd > 1 && factorBalanceo(nodo.der) >= 0){ // DD
             rotacionIzquierda(nodo);
         }
-        if (fbd < -1 && factorBalanceo(nodo.izq) > 0){ // DI
+        else if (fbd < -1 && factorBalanceo(nodo.izq) > 0){ // DI
             rotacionIzquierdaDerecha(nodo);
         }
-        if (fbd > 1 && factorBalanceo(nodo.der) < 0){ // ID
+        else if (fbd > 1 && factorBalanceo(nodo.der) < 0){ // ID
             rotacionDerechaIzquierda(nodo);
         }
     }
@@ -87,10 +90,23 @@ public class ArbolAVL<T extends Comparable<T>>{
     private void rotacionDerecha(NodoAVL nodo){
         NodoAVL nodoIzq = nodo.izq;
         if (nodoIzq != null){ // debe ser necesariamente distinto a nulo el nodo izquierdo al que voy a rotar.
+            if (nodo == raiz) {
+                NodoAVL cambiarRaiz = new NodoAVL(0, 0);
+                cambiarRaiz = nodoIzq;
+                cambiarRaiz.izq = nodoIzq.der;
+                cambiarRaiz.der = nodo;
+                
+                nodo = cambiarRaiz;
+                nodoIzq.der = nodo;
+                nodo.padre = nodoIzq;
+
+            }
             nodo.izq = nodoIzq.der;
             nodoIzq.der = nodo;
             nodoIzq.padre = nodo.padre;
-            nodo.padre.izq = nodoIzq;
+            if (nodo.padre != null){
+                nodo.padre.izq = nodoIzq;
+            }
             nodo.padre = nodoIzq;
         }
     }
@@ -101,7 +117,9 @@ public class ArbolAVL<T extends Comparable<T>>{
             nodo.der = nodoDer.izq;
             nodoDer.izq = nodo;
             nodoDer.padre = nodo.padre;
-            nodo.padre.der = nodoDer;
+            if (nodo.padre != null){
+                nodo.padre.der = nodoDer;
+            }
             nodo.padre = nodoDer;
         }
     }
@@ -133,7 +151,7 @@ public class ArbolAVL<T extends Comparable<T>>{
     }
 
 
-    public void eliminar(T elem) { // Hay que ver la forma de una vez que llego a el nodo que voy a eliminar, una vez eliminado, comenzar a rebalancear el arbol desde ese nodo hasta el padre en esa unica rama.
+    public void eliminar(int elem) { // Hay que ver la forma de una vez que llego a el nodo que voy a eliminar, una vez eliminado, comenzar a rebalancear el arbol desde ese nodo hasta el padre en esa unica rama.
                                    //Para cada nodo con factor de balanceo ±2 hay que hacer una rotación simple o doble.
         if (raiz.clave == elem){
            raiz = null; 
@@ -142,11 +160,11 @@ public class ArbolAVL<T extends Comparable<T>>{
         }
     }
     
-    private void eliminarAux(NodoAVL nodo, T elem) {
-        if (elem.compareTo(nodo.clave) < 0) {
+    private void eliminarAux(NodoAVL nodo, int elem) {
+        if (elem < nodo.clave) {
             eliminarAux(nodo.izq, elem);
         } 
-        else if (elem.compareTo(nodo.clave) > 0) {
+        else if (elem > nodo.clave) {
             eliminarAux(nodo.der, elem);
         } 
         else {   
@@ -183,16 +201,15 @@ public class ArbolAVL<T extends Comparable<T>>{
         }
     }
 
-    public T buscarPosic(ArbolAVL arbol, T id){
-        NodoAVL nodo = arbol.raiz;
-        return buscarPosicAux(nodo, id);
+    public int buscarPosic(ArbolAVL arbol, int id){
+        return buscarPosicAux(arbol.raiz, id);
     }
 
-    private T buscarPosicAux(NodoAVL nodo, T id){
-        if (nodo.clave.compareTo(id) == 0){
+    private int buscarPosicAux(NodoAVL nodo, int id){
+        if (nodo.clave == id){
             return nodo.dato;
         }
-        else if (nodo.clave.compareTo(id) > 0){
+        else if (nodo.clave > id){
             return buscarPosicAux(nodo.izq, id);
         }
         else{
@@ -200,15 +217,15 @@ public class ArbolAVL<T extends Comparable<T>>{
         }
     }
 
-    public void modificarValor(ArbolAVL arbol, T id, T posicion){
+    public void modificarValor(ArbolAVL arbol, int id, int posicion){
         modificarValorAux(arbol.raiz, id, posicion);
     }
 
-    private void modificarValorAux(NodoAVL nodo, T id, T posicion){
+    private void modificarValorAux(NodoAVL nodo, int id, int posicion){
         if (nodo.clave == id){
             nodo.dato = posicion;
         }
-        else if (nodo.clave.compareTo(id) > 0){
+        else if (nodo.clave > id){
             modificarValorAux(nodo.izq, id, posicion);
         }
         else{
@@ -216,4 +233,3 @@ public class ArbolAVL<T extends Comparable<T>>{
         }
     }
 }
-    
