@@ -1,0 +1,144 @@
+package aed;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
+public class BestEffortMasTest {
+
+
+
+    int cantCiudades;
+    Traslado[] listaTraslados;
+    ArrayList<Integer> actual;
+
+
+    @BeforeEach
+    void init(){
+        //Reiniciamos los valores de las ciudades y traslados antes de cada test
+        cantCiudades = 10;
+        listaTraslados = new Traslado[] {
+                                            new Traslado(1, 0, 1, 10, 100),
+                                            new Traslado(2, 2, 1, 20, 150),
+                                            new Traslado(3, 3, 2, 30, 130),
+                                            new Traslado(4, 4, 3, 40, 110),
+                                            new Traslado(5, 5, 4, 50, 120),
+                                            new Traslado(6, 6, 5, 60, 170),
+                                            new Traslado(7, 7, 6, 70, 180),
+                                            new Traslado(8, 8, 7, 80, 140),
+                                            new Traslado(9, 9, 1, 90, 190),
+                                            new Traslado(10, 1, 0, 100, 200)
+                                            
+                                        };
+    }
+
+    void assertSetEquals(ArrayList<Integer> s1, ArrayList<Integer> s2) {
+        assertEquals(s1.size(), s2.size());
+        for (int e1 : s1) {
+            boolean encontrado = false;
+            for (int e2 : s2) {
+                if (e1 == e2) encontrado = true;
+            }
+            assertTrue(encontrado);
+        }
+    }
+    void assertArrayEquals(int[] esperado, int[] actual) {
+        // Verifica que ambos arreglos tengan el mismo tamaño
+        assertEquals(esperado.length, actual.length);
+        
+        // Verifica que cada elemento sea igual
+        for (int i = 0; i < esperado.length; i++) {
+            assertEquals(esperado[i], actual[i]);
+        }
+    }
+    ArrayList<Integer> ordenar(ArrayList<Integer> lista) {
+        int n = lista.size();
+        for (int i = 0; i < n - 1; i++) {
+            for (int j = 0; j < n - 1 - i; j++) {
+                if (lista.get(j) > lista.get(j + 1)) {
+                    // Intercambia lista[j] y lista[j + 1]
+                    int temp = lista.get(j);
+                    lista.set(j, lista.get(j + 1));
+                    lista.set(j + 1, temp);
+                }
+            }
+        }
+        return lista;
+    }
+
+@Test
+void testCantidadMinimaDeTrasladosYCiudades() {
+    //Verifica si el sistema funciona correctamente con solo una ciudad y un traslado, asegurando que maneje el caso base.
+    BestEffort sis = new BestEffort(1, new Traslado[] { 
+        new Traslado(1, 0, 0, 100, 10) 
+    });
+    sis.despacharMasRedituables(1);
+    assertEquals(0, sis.ciudadConMayorSuperavit());
+    assertEquals(Arrays.asList(0), sis.ciudadesConMayorGanancia());
+    assertEquals(Arrays.asList(0), sis.ciudadesConMayorPerdida());
+}
+
+@Test
+void testDespacharMasDeLoDisponibleRedituables(){
+    //Intenta despachar más traslados que los disponibles y verifica que el sistema maneje correctamente la falta de traslados, despache todos.
+    BestEffort sis = new BestEffort(this.cantCiudades, this.listaTraslados);
+    int[] esperado = {10, 9, 8, 7, 6, 5, 4, 3, 2, 1};
+    assertArrayEquals(esperado, sis.despacharMasRedituables(11));
+}
+@Test
+void testDespacharMasDeLoDisponibleAntiguos(){
+    //Intenta despachar más traslados que los disponibles y verifica que el sistema maneje correctamente la falta de traslados, despache todos.
+    BestEffort sis = new BestEffort(this.cantCiudades, this.listaTraslados);
+    int[] esperado = {1,4,5,3,8,2,6,7,9,10};
+    assertArrayEquals(esperado, sis.despacharMasAntiguos(11));
+}
+
+@Test
+void testEmpateEnSuperavit() {
+    //Crea un caso en el que haya un empate en el superávit entre dos ciudades y verifica que el sistema elija la ciudad con menor identificador.
+    BestEffort sis = new BestEffort(3, new Traslado[] {
+        new Traslado(1, 0, 1, 100, 10),
+        new Traslado(2, 1, 2, 100, 20)
+    });
+    sis.despacharMasRedituables(2);
+    assertEquals(0, sis.ciudadConMayorSuperavit());
+}
+
+@Test
+void testPromedioConDecimales() {
+    //Crea un caso en el que haya un empate en el superávit entre dos ciudades y verifica que el sistema elija la ciudad con menor identificador.
+    BestEffort sis = new BestEffort(this.cantCiudades, this.listaTraslados);
+    Traslado [] nuevo = {new Traslado(11,0,1,103,210)};
+    sis.registrarTraslados(nuevo);
+    sis.despacharMasRedituables(2);
+    assertEquals(101, sis.gananciaPromedioPorTraslado());
+}
+@Test
+void testDosCiudadesConIgualGananciayPerdida(){
+        //Asegura que devuelva un array con los ID de ambas ciudades
+    BestEffort sis = new BestEffort(3, new Traslado[] {
+        new Traslado(1, 0, 1, 100, 10),
+        new Traslado(2, 1, 0, 100, 20)
+    });
+    sis.despacharMasRedituables(2);
+           // Resultado esperado
+    ArrayList<Integer> esperado = new ArrayList<>(Arrays.asList(1, 0));
+    ArrayList<Integer> gananciaActual = new ArrayList<>(sis.ciudadesConMayorGanancia());
+    ArrayList<Integer> perdidaActual = new ArrayList<>(sis.ciudadesConMayorPerdida());
+
+    // Ordena ambas listas antes de comparar
+    ordenar(esperado);
+    ordenar(gananciaActual);
+    ordenar(perdidaActual);
+
+    // Comparación
+    assertEquals(esperado, gananciaActual);
+    assertEquals(esperado, perdidaActual);
+        
+    
+    }  
+}
